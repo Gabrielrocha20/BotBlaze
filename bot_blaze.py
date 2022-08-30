@@ -55,8 +55,7 @@ class BotDouble:
 
             self.dados.append('0' if pegar_dados == '' else pegar_dados)
             index += 1
-            self.dados = self.dados[::-1]
-        return self.transforma_cores(self.dados)
+        return self.transforma_cores(self.dados[::-1])
 
     def transforma_cores(self, dados):
         self.cores = ' '.join(['B' if int(n) == 0 else 'V' if int(n) <= 7 else 'P' for n in dados])
@@ -67,10 +66,10 @@ class BotDouble:
         for sequencia, resultado, vitoria, derrota in resultados:
             if self.cores == sequencia:
                 self.calculadora(vitoria, derrota)
-                return
-
+                return self.enviar_msg_telegram(prev=resultado, percentual=self.percentual)
+        print('nao')
         self.sem_resultado = True
-        return 'Aguarde'
+        return self.enviar_msg_telegram(msg='Aguarde')
 
     def novo_padrao(self, resultado):
         self.cursor.execute(f'INSERT INTO padroes (Padrao, Resultado, Vitoria, Derrota) VALUES ("{self.cores}"'
@@ -93,7 +92,7 @@ class BotDouble:
                         {percentual[0]:.0f}% Win | {percentual[1]:.0f}% Loss
 
                         Sequencia: {sequencia}
-                        Entrar depois do {self.dados[-1]}
+                        Entrar depois do {self.dados[0]}
                         Com Gale 1
 
                         Tendencias:
@@ -109,8 +108,9 @@ class BotDouble:
 
 if __name__ == '__main__':
     s = ''
-    bot = BotDouble('Oi', 'A')
+    bot = BotDouble('5642593484:AAFTATUVCN1rUePW45BGbKF7DY_mWktPQdU', '-623026227')
     while s == '':
         bot.coletar_dados()
+        bot.checar_padroes()
         print(bot.cores)
         s = input('Digite: ')
