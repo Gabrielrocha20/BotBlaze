@@ -30,6 +30,11 @@ class BotDouble:
         self.percentual = []
         self.dados = []
 
+        self.win_cores = 0
+        self.win_branco = 0
+        self.win_gale = 0
+        self.loss = 0
+
         # Validação para interface
         self.sem_resultado = False
 
@@ -101,9 +106,42 @@ class BotDouble:
                         Tendendia de Black:⚫⚫🔴🔴
                         Tendendia de Black:⚫🔴⚫🔴
                         """
+            url = f'https://api.telegram.org/bot{self.api}/sendMessage?chat_id={self.chat_id}&text={msg}'
+            requests.get(url)
+            resultado = input('Qual foi o resultado: Win[1], Branco[2], Gale[3], Loss[4]')
+            return self.resultado_do_giro(resultado)
         url = f'https://api.telegram.org/bot{self.api}/sendMessage?chat_id={self.chat_id}&text={msg}'
         requests.get(url)
-        
+
+
+    def resultado_do_giro(self, resultado):
+        alternativa = {
+            '1': '🟢🟢🟢WIN🟢🟢🟢',
+            '2': '⚪⚪⚪Branco⚪⚪⚪',
+            '3': '🐔🐔🐔G1🐔🐔🐔',
+            '4': '🔴🔴🔴Loss🔴🔴🔴'
+        }
+
+        self.enviar_msg_telegram(msg=alternativa[resultado])
+        self.contagem_resultados(resultado)
+
+    def contagem_resultados(self, resultado):
+        if resultado == '1':
+            self.win_cores += 1
+        elif resultado == '2':
+            self.win_branco += 1
+        elif resultado == '3':
+            self.win_gale += 1
+        else:
+            self.loss += 1
+        self.enviar_msg_telegram(msg=f'{self.win_cores}Wins🟢   '
+                                     f'{self.win_branco}Brancos⚪   '
+                                     f'{self.win_gale}Gale🐔   '
+                                     f'{self.loss}Loss🔴')
+
+
+    def exit(self):
+        self.driver.quit()
 
 
 if __name__ == '__main__':
@@ -112,5 +150,5 @@ if __name__ == '__main__':
     while s == '':
         bot.coletar_dados()
         bot.checar_padroes()
-        print(bot.cores)
         s = input('Digite: ')
+    bot.exit()
