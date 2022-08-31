@@ -44,6 +44,12 @@ class BotDouble:
         resultados = self.cursor.fetchall()
         return resultados
 
+    def ler_vitoria_derrota(self, sequencia):
+        self.cursor.execute(f'SELECT Vitoria, Derrota FROM padroes WHERE padrao="{sequencia}"')
+        resultado = self.cursor.fetchall()
+        for vitoria, derrota in resultado:
+            return [vitoria, derrota]
+
     def calculadora(self, vitoria, derrota):
         soma = vitoria + derrota + 2
         self.percentual = [(vitoria + 1) * 100 / soma, (derrota + 1) * 100 / soma]
@@ -117,7 +123,7 @@ class BotDouble:
     def resultado_do_giro(self, resultado):
         alternativa = {
             '1': '🟢🟢🟢WIN🟢🟢🟢',
-            '2': '⚪⚪⚪Branco⚪⚪⚪',
+            '2': '⚪⚪⚪Branco⚪⚪⚪ \n Tente no duplo tambem',
             '3': '🐔🐔🐔G1🐔🐔🐔',
             '4': '🔴🔴🔴Loss🔴🔴🔴'
         }
@@ -126,19 +132,27 @@ class BotDouble:
         self.contagem_resultados(resultado)
 
     def contagem_resultados(self, resultado):
+        resultados = self.ler_vitoria_derrota(self.cores)
         if resultado == '1':
             self.win_cores += 1
+            self.cursor.execute(f'UPDATE padroes SET Vitoria ={resultados[0] + 1} WHERE Padrao="{self.cores}"')
+            self.conectar.commit()
         elif resultado == '2':
             self.win_branco += 1
+            self.cursor.execute(f'UPDATE padroes SET Vitoria ={resultados[0] + 1} WHERE Padrao="{self.cores}"')
+            self.conectar.commit()
         elif resultado == '3':
             self.win_gale += 1
+            self.cursor.execute(f'UPDATE padroes SET Vitoria ={resultados[0] + 1} WHERE Padrao="{self.cores}"')
+            self.conectar.commit()
         else:
             self.loss += 1
+            self.cursor.execute(f'UPDATE padroes SET Derrota ={resultados[1] + 1} WHERE Padrao="{self.cores}"')
+            self.conectar.commit()
         self.enviar_msg_telegram(msg=f'{self.win_cores}Wins🟢   '
                                      f'{self.win_branco}Brancos⚪   '
                                      f'{self.win_gale}Gale🐔   '
                                      f'{self.loss}Loss🔴')
-
 
     def exit(self):
         self.driver.quit()
