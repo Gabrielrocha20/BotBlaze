@@ -76,6 +76,7 @@ class BotDouble:
         resultados = self.ler_banco()
         for sequencia, resultado, vitoria, derrota in resultados:
             if self.cores == sequencia:
+                print(self.cores, '---', sequencia, resultado)
                 self.calculadora(vitoria, derrota)
                 return self.enviar_msg_telegram(prev=resultado, percentual=self.percentual)
         print('nao')
@@ -135,19 +136,19 @@ class BotDouble:
         resultados = self.ler_vitoria_derrota(self.cores)
         if resultado == '1':
             self.win_cores += 1
-            self.cursor.execute(f'UPDATE padroes SET Vitoria ={resultados[0] + 1} WHERE Padrao="{self.cores}"')
+            self.cursor.execute(f'UPDATE padroes SET Vitoria={resultados[0] + 1} WHERE Padrao="{self.cores}"')
             self.conectar.commit()
         elif resultado == '2':
             self.win_branco += 1
-            self.cursor.execute(f'UPDATE padroes SET Vitoria ={resultados[0] + 1} WHERE Padrao="{self.cores}"')
+            self.cursor.execute(f'UPDATE padroes SET Vitoria={resultados[0] + 1} WHERE Padrao="{self.cores}"')
             self.conectar.commit()
         elif resultado == '3':
             self.win_gale += 1
-            self.cursor.execute(f'UPDATE padroes SET Vitoria ={resultados[0] + 1} WHERE Padrao="{self.cores}"')
+            self.cursor.execute(f'UPDATE padroes SET Vitoria={resultados[0] + 1} WHERE Padrao="{self.cores}"')
             self.conectar.commit()
         else:
             self.loss += 1
-            self.cursor.execute(f'UPDATE padroes SET Derrota ={resultados[1] + 1} WHERE Padrao="{self.cores}"')
+            self.cursor.execute(f'UPDATE padroes SET Derrota={resultados[1] + 1} WHERE Padrao="{self.cores}"')
             self.conectar.commit()
         self.enviar_msg_telegram(msg=f'{self.win_cores}Wins🟢   '
                                      f'{self.win_branco}Brancos⚪   '
