@@ -7,9 +7,9 @@ from selenium.webdriver.common.by import By
 
 
 class BotDouble:
-    def __init__(self, api, chat_id):
-        self.api = api
-        self.chat_id = chat_id
+    def __init__(self):
+        self.api = ''
+        self.chat_id = ''
 
         self.option = Options()
         self.option.add_argument("-headless")
@@ -29,6 +29,7 @@ class BotDouble:
         self.cores = ''
         self.percentual = []
         self.dados = []
+        self.msg_app = ''
 
         self.win_cores = 0
         self.win_branco = 0
@@ -76,10 +77,9 @@ class BotDouble:
         resultados = self.ler_banco()
         for sequencia, resultado, vitoria, derrota in resultados:
             if self.cores == sequencia:
-                print(self.cores, '---', sequencia, resultado)
                 self.calculadora(vitoria, derrota)
+                self.msg_app = self.enviar_para_app(sequencia, self.dados[0], resultado)
                 return self.enviar_msg_telegram(prev=resultado, percentual=self.percentual)
-        print('nao')
         self.sem_resultado = True
         return self.enviar_msg_telegram(msg='Aguarde')
 
@@ -115,10 +115,16 @@ class BotDouble:
                         """
             url = f'https://api.telegram.org/bot{self.api}/sendMessage?chat_id={self.chat_id}&text={msg}'
             requests.get(url)
-            resultado = input('Qual foi o resultado: Win[1], Branco[2], Gale[3], Loss[4]')
-            return self.resultado_do_giro(resultado)
+            return
         url = f'https://api.telegram.org/bot{self.api}/sendMessage?chat_id={self.chat_id}&text={msg}'
         requests.get(url)
+
+    def enviar_para_app(self, sequencia: str, numero, resultado):
+        sequencia = sequencia.replace('V', self.emoji['Vermelho'])\
+                                .replace('P', self.emoji['Preto'])\
+                                .replace('B', self.emoji['Branco'])
+        return f'{sequencia} entrar apos o {numero} na cor {self.emoji[resultado]}'
+
 
 
     def resultado_do_giro(self, resultado):
@@ -159,11 +165,11 @@ class BotDouble:
         self.driver.quit()
 
 
-if __name__ == '__main__':
-    s = ''
-    bot = BotDouble('5642593484:AAFTATUVCN1rUePW45BGbKF7DY_mWktPQdU', '-623026227')
-    while s == '':
-        bot.coletar_dados()
-        bot.checar_padroes()
-        s = input('Digite: ')
-    bot.exit()
+# if __name__ == '__main__':
+#    s = ''
+#    bot = BotDouble('5642593484:AAFTATUVCN1rUePW45BGbKF7DY_mWktPQdU', '-623026227')
+#    while s == '':
+#        bot.coletar_dados()
+#        bot.checar_padroes()
+#        s = input('Digite: ')
+#   bot.exit()
