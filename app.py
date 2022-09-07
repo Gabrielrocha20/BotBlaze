@@ -15,6 +15,10 @@ class AppBot(QMainWindow, Ui_MainWindow):
         self.username = getenv("USERNAME")
         self.arquivo = fr'C:\Users\{self.username}\Desktop\configuração_bot.txt'
         if os.path.isfile(self.arquivo):
+            pass
+        else:
+            self.arquivo = fr'C:\Users\{self.username}\OneDrive\Área de Trabalho\configuração_bot.txt'
+        if os.path.isfile(self.arquivo):
             with open(self.arquivo, 'r') as config:
                 chave_api, chat_id = config
             self.bot.api = chave_api.strip()
