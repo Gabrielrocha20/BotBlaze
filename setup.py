@@ -5,7 +5,7 @@ from cx_Freeze import setup, Executable
 files = ['icone.ico', 'interface.py', 'bot_blaze.py', 'banco_de_padroes.db', 'chromedriver.exe']
 
 target = Executable(
-    script="main.py",
+    script="app.py",
     base="Win32GUI",
     icon="icone.ico"
 )
