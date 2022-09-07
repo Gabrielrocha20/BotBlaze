@@ -7,9 +7,9 @@ from selenium.webdriver.common.by import By
 
 
 class BotDouble:
-    def __init__(self, api, chat_id):
-        self.api = api
-        self.chat_id = chat_id
+    def __init__(self):
+        self.api = ''
+        self.chat_id = ''
 
         self.option = Options()
         self.option.add_argument("-headless")
@@ -29,6 +29,12 @@ class BotDouble:
         self.cores = ''
         self.percentual = []
         self.dados = []
+        self.msg_app = ''
+
+        self.win_cores = 0
+        self.win_branco = 0
+        self.win_gale = 0
+        self.loss = 0
 
         # Validação para interface
         self.sem_resultado = False
@@ -38,6 +44,12 @@ class BotDouble:
         self.cursor.execute(f'SELECT * FROM padroes')
         resultados = self.cursor.fetchall()
         return resultados
+
+    def ler_vitoria_derrota(self, sequencia):
+        self.cursor.execute(f'SELECT Vitoria, Derrota FROM padroes WHERE padrao="{sequencia}"')
+        resultado = self.cursor.fetchall()
+        for vitoria, derrota in resultado:
+            return [vitoria, derrota]
 
     def calculadora(self, vitoria, derrota):
         soma = vitoria + derrota + 2
@@ -66,8 +78,8 @@ class BotDouble:
         for sequencia, resultado, vitoria, derrota in resultados:
             if self.cores == sequencia:
                 self.calculadora(vitoria, derrota)
+                self.msg_app = self.enviar_para_app(sequencia, self.dados[0], resultado)
                 return self.enviar_msg_telegram(prev=resultado, percentual=self.percentual)
-        print('nao')
         self.sem_resultado = True
         return self.enviar_msg_telegram(msg='Aguarde')
 
@@ -101,16 +113,63 @@ class BotDouble:
                         Tendendia de Black:⚫⚫🔴🔴
                         Tendendia de Black:⚫🔴⚫🔴
                         """
+            url = f'https://api.telegram.org/bot{self.api}/sendMessage?chat_id={self.chat_id}&text={msg}'
+            requests.get(url)
+            return
         url = f'https://api.telegram.org/bot{self.api}/sendMessage?chat_id={self.chat_id}&text={msg}'
         requests.get(url)
-        
+
+    def enviar_para_app(self, sequencia: str, numero, resultado):
+        sequencia = sequencia.replace('V', self.emoji['Vermelho'])\
+                                .replace('P', self.emoji['Preto'])\
+                                .replace('B', self.emoji['Branco'])
+        return f'{sequencia} entrar apos o {numero} na cor {self.emoji[resultado]}'
 
 
-if __name__ == '__main__':
-    s = ''
-    bot = BotDouble('5642593484:AAFTATUVCN1rUePW45BGbKF7DY_mWktPQdU', '-623026227')
-    while s == '':
-        bot.coletar_dados()
-        bot.checar_padroes()
-        print(bot.cores)
-        s = input('Digite: ')
+
+    def resultado_do_giro(self, resultado):
+        alternativa = {
+            '1': '🟢🟢🟢WIN🟢🟢🟢',
+            '2': '⚪⚪⚪Branco⚪⚪⚪ \n Tente no duplo tambem',
+            '3': '🐔🐔🐔G1🐔🐔🐔',
+            '4': '🔴🔴🔴Loss🔴🔴🔴'
+        }
+
+        self.enviar_msg_telegram(msg=alternativa[resultado])
+        self.contagem_resultados(resultado)
+
+    def contagem_resultados(self, resultado):
+        resultados = self.ler_vitoria_derrota(self.cores)
+        if resultado == '1':
+            self.win_cores += 1
+            self.cursor.execute(f'UPDATE padroes SET Vitoria={resultados[0] + 1} WHERE Padrao="{self.cores}"')
+            self.conectar.commit()
+        elif resultado == '2':
+            self.win_branco += 1
+            self.cursor.execute(f'UPDATE padroes SET Vitoria={resultados[0] + 1} WHERE Padrao="{self.cores}"')
+            self.conectar.commit()
+        elif resultado == '3':
+            self.win_gale += 1
+            self.cursor.execute(f'UPDATE padroes SET Vitoria={resultados[0] + 1} WHERE Padrao="{self.cores}"')
+            self.conectar.commit()
+        else:
+            self.loss += 1
+            self.cursor.execute(f'UPDATE padroes SET Derrota={resultados[1] + 1} WHERE Padrao="{self.cores}"')
+            self.conectar.commit()
+        self.enviar_msg_telegram(msg=f'{self.win_cores}Wins🟢   '
+                                     f'{self.win_branco}Brancos⚪   '
+                                     f'{self.win_gale}Gale🐔   '
+                                     f'{self.loss}Loss🔴')
+
+    def exit(self):
+        self.driver.quit()
+
+
+# if __name__ == '__main__':
+#    s = ''
+#    bot = BotDouble('5642593484:AAFTATUVCN1rUePW45BGbKF7DY_mWktPQdU', '-623026227')
+#    while s == '':
+#        bot.coletar_dados()
+#        bot.checar_padroes()
+#        s = input('Digite: ')
+#   bot.exit()
