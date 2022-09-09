@@ -1,9 +1,6 @@
 import sqlite3
-from time import sleep
-from selenium import webdriver
 import requests
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
+import json
 
 
 class BotDouble:
@@ -11,11 +8,7 @@ class BotDouble:
         self.api = ''
         self.chat_id = ''
 
-        self.option = Options()
-        self.option.add_argument("-headless")
-
-        self.driver = webdriver.Chrome(options=self.option)
-        self.driver.get('https://blaze.com/pt/games/double')
+        self.URL_LINK_BLAZE = 'https://blaze.com/api/roulette_games/recent'
 
         self.emoji = {
             'Vermelho': '🔴',
@@ -51,6 +44,13 @@ class BotDouble:
         for vitoria, derrota in resultado:
             return [vitoria, derrota]
 
+    def novo_padrao(self, resultado):
+        self.cursor.execute(f'INSERT INTO padroes (Padrao, Resultado, Vitoria, Derrota) VALUES ("{self.cores}"'
+                            f', "{resultado}",'
+                            f'{0}, {0})')
+        self.conectar.commit()
+        self.sem_resultado = False
+
     def calculadora(self, vitoria, derrota):
         soma = vitoria + derrota + 2
         self.percentual = [(vitoria + 1) * 100 / soma, (derrota + 1) * 100 / soma]
@@ -60,12 +60,14 @@ class BotDouble:
 
     def coletar_dados(self):
         self.dados = []
-        index = 1
+        index = 0
+        information = requests.get(self.URL_LINK_BLAZE)
+        results_colors = json.loads(information.text)
 
-        while index <= 5:
-            pegar_dados = self.driver.find_element(By.XPATH, f'//*[@id="roulette-recent"]/div/div[1]/div[{index}]').text
+        while index <= 4:
+            pegar_dados = results_colors[index]['roll']
 
-            self.dados.append('0' if pegar_dados == '' else pegar_dados)
+            self.dados.append(f'{pegar_dados}')
             index += 1
         return self.transforma_cores(self.dados[::-1])
 
@@ -83,18 +85,11 @@ class BotDouble:
         self.sem_resultado = True
         return self.enviar_msg_telegram(msg='Aguarde')
 
-    def novo_padrao(self, resultado):
-        self.cursor.execute(f'INSERT INTO padroes (Padrao, Resultado, Vitoria, Derrota) VALUES ("{self.cores}"'
-                            f', "{resultado}",'
-                            f'{0}, {0})')
-        self.conectar.commit()
-        self.sem_resultado = False
-    
     def enviar_msg_telegram(self, prev=None, percentual=None, msg=None):
         if msg is None:
-            sequencia = self.cores\
-                .replace('V', self.emoji['Vermelho'])\
-                .replace('P', self.emoji['Preto'])\
+            sequencia = self.cores \
+                .replace('V', self.emoji['Vermelho']) \
+                .replace('P', self.emoji['Preto']) \
                 .replace('B', self.emoji['Branco'])
             msg = f"""
                         Chance de ser {self.emoji[prev]} 
@@ -120,12 +115,10 @@ class BotDouble:
         requests.get(url)
 
     def enviar_para_app(self, sequencia: str, numero, resultado):
-        sequencia = sequencia.replace('V', self.emoji['Vermelho'])\
-                                .replace('P', self.emoji['Preto'])\
-                                .replace('B', self.emoji['Branco'])
+        sequencia = sequencia.replace('V', self.emoji['Vermelho']) \
+            .replace('P', self.emoji['Preto']) \
+            .replace('B', self.emoji['Branco'])
         return f'{sequencia} entrar apos o {numero} na cor {self.emoji[resultado]}'
-
-
 
     def resultado_do_giro(self, resultado):
         alternativa = {
@@ -161,15 +154,14 @@ class BotDouble:
                                      f'{self.win_gale}Gale🐔   '
                                      f'{self.loss}Loss🔴')
 
-    def exit(self):
-        self.driver.quit()
 
+if __name__ == '__main__':
+    s = ''
+    bot = BotDouble()
+    bot.api = '5642593484:AAFTATUVCN1rUePW45BGbKF7DY_mWktPQdU'
+    bot.chat_id = '-623026227'
+    while s == '':
+        bot.coletar_dados()
+        bot.checar_padroes()
+        s = input('Digite: ')
 
-# if __name__ == '__main__':
-#    s = ''
-#    bot = BotDouble('5642593484:AAFTATUVCN1rUePW45BGbKF7DY_mWktPQdU', '-623026227')
-#    while s == '':
-#        bot.coletar_dados()
-#        bot.checar_padroes()
-#        s = input('Digite: ')
-#   bot.exit()
