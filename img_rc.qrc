@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="img_rc">
+    <file>bot/back.png</file>
+    <file>bot/gear.png</file>
+    <file>bot/menu.png</file>
+    <file>bot/on-off-button.png</file>
+    <file>bot/warning-sign.png</file>
+    <file>bot/app.png</file>
+  </qresource>
+</RCC>
