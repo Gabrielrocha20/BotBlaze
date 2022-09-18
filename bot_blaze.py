@@ -34,7 +34,7 @@ class BotDouble:
 
     ######## Funçoes para retornar resultados ########
     def ler_banco(self):
-        self.cursor.execute(f'SELECT * FROM padroes')
+        self.cursor.execute('SELECT * FROM padroes')
         resultados = self.cursor.fetchall()
         return resultados
 
@@ -81,18 +81,18 @@ class BotDouble:
             if self.cores == sequencia:
                 self.calculadora(vitoria, derrota)
                 self.msg_app = self.enviar_para_app(sequencia, self.dados[0], resultado)
-                return self.enviar_msg_telegram(prev=resultado, percentual=self.percentual)
+                return self.enviar_msg_telegram(previsao=resultado, percentual=self.percentual)
         self.sem_resultado = True
         return self.enviar_msg_telegram(msg='Aguarde')
 
-    def enviar_msg_telegram(self, prev=None, percentual=None, msg=None):
+    def enviar_msg_telegram(self, previsao=None, percentual=None, msg=None):
         if msg is None:
             sequencia = self.cores \
                 .replace('V', self.emoji['Vermelho']) \
                 .replace('P', self.emoji['Preto']) \
                 .replace('B', self.emoji['Branco'])
             msg = f"""
-                        Chance de ser {self.emoji[prev]} 
+                        Chance de ser {self.emoji[previsao]} 
                         Com proteção no ⚪
                         Lembrando Caso nao esteja a favor
 

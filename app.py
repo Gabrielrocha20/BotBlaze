@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from interface import *
+from bot_app import *
 from bot_blaze import BotDouble
 from os import getenv
 import os.path
@@ -25,7 +25,7 @@ class AppBot(QMainWindow, Ui_MainWindow):
             self.inputChaveapi.setText(self.bot.api)
 
             self.bot.chat_id = chat_id.strip()
-            self.inputChatid.setText(self.bot.chat_id)
+            self.inputChaveid.setText(self.bot.chat_id)
 
 
         ###BOTÕES###
@@ -33,13 +33,16 @@ class AppBot(QMainWindow, Ui_MainWindow):
         self.btnConfiguracao.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.page_2))
         self.btnVoltar.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.page))
         self.btnIniciar.clicked.connect(self.iniciar_bot)
-        self.btnParar.clicked.connect(self.parar_bot)
         self.btnRodar.clicked.connect(self.rodar)
 
         self.btnBranco.clicked.connect(self.winBranco)
         self.btnWin.clicked.connect(self.winGreen)
         self.btnGale.clicked.connect(self.winGale)
         self.btnLoss.clicked.connect(self.loss)
+
+        self.btnAlerta.clicked.connect(self.alerta_comecando)
+        self.btnContraTendencia.clicked.connect(self.contra_tendencia)
+        self.btnJogaGale.clicked.connect(self.jogar_gale)
 
         ### Contador
         self.Branco_count = 0
@@ -51,14 +54,11 @@ class AppBot(QMainWindow, Ui_MainWindow):
         if os.path.isfile(self.arquivo):
             return
         self.bot.api = self.inputChaveapi.text()
-        self.bot.chat_id = self.inputChatid.text()
+        self.bot.chat_id = self.inputChaveid.text()
         if self.checkManterSalvo.isChecked():
             with open(self.arquivo, 'w') as config:
                 config.write(f'{self.inputChaveapi.text()} \n'
-                             f'{self.inputChatid.text()}')
-
-    def parar_bot(self):
-        self.bot.exit()
+                             f'{self.inputChaveid.text()}')
 
     def menu_lateral(self):
         width = self.menu.width()
@@ -78,32 +78,35 @@ class AppBot(QMainWindow, Ui_MainWindow):
         self.bot.coletar_dados()
         self.bot.checar_padroes()
         self.labelSinais.setText(self.bot.msg_app if len(self.bot.msg_app) > 2 else 'Aguarde')
-        self.labelMarque.setText('Marque o resultado')
 
     def winBranco(self):
         self.bot.resultado_do_giro('2')
         self.Branco_count += 1
         self.labelBranco.setText(f'{self.Branco_count}')
-        self.labelMarque.setText('')
 
     def winGreen(self):
         self.bot.resultado_do_giro('1')
         self.Win_count += 1
         self.labelWin.setText(f'{self.Win_count}')
-        self.labelMarque.setText('')
 
     def winGale(self):
         self.bot.resultado_do_giro('3')
         self.Gale_count += 1
         self.labelGale.setText(f'{self.Gale_count}')
-        self.labelMarque.setText('')
 
     def loss(self):
         self.bot.resultado_do_giro('4')
         self.Loss_count += 1
         self.labelLoss.setText(f'{self.Loss_count}')
-        self.labelMarque.setText('')
 
+    def jogar_gale(self):
+        self.bot.enviar_msg_telegram(msg='Jogar Gale 1')
+
+    def contra_tendencia(self):
+        self.bot.enviar_msg_telegram(msg='Alerta Contra Tendencia')
+
+    def alerta_comecando(self):
+        self.bot.enviar_msg_telegram(msg='Vamos Começar Todos prontos')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
